@@ -6,7 +6,7 @@
 #   ./build.sh [image_name] [version]
 #
 # example:
-#   ./build.sh herpinc/brittany 0.12.1.1
+#   ./build.sh herpinc/brittany:0.12.1.1 0.12.1.1
 #
 
 set -euo pipefail
