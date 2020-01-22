@@ -1,16 +1,14 @@
-FROM fpco/stack-build
+ARG STACK_IMAGE
+FROM ${STACK_IMAGE}
 
 # setup build environment
-RUN echo "build: { split-objs: true }" >> /etc/stack/config.yaml
-RUN stack update
-
 WORKDIR /tmp
 ADD https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz upx.tar.xz
 RUN tar --strip-components=1 -xf upx.tar.xz && mv upx /usr/bin/
 
-ENV DEBIAN_FRONTENV=noninteractive
-RUN apt-get update
-RUN apt-get install -y patchelf
+RUN mkdir -p /etc/stack && \
+      echo "{ system-ghc: true, build: { split-objs: true } }" > /etc/stack/config.yaml
+RUN stack update
 
 # prepare source
 ARG TARBALL
@@ -61,10 +59,7 @@ RUN { \
 
 # copy
 FROM scratch
-COPY --from=0 /bundle.tar.gz /tmp/bundle.tar.gz
-ARG BUSYBOX_PATH
-COPY ${BUSYBOX_PATH} /busybox
-RUN ["/busybox", "sh", "-c", "/busybox tar xf /tmp/bundle.tar.gz -C / && /busybox rm /tmp/bundle.tar.gz /busybox"]
+COPY --from=0 /closure/ /.
 
 WORKDIR /work
-CMD ["/usr/bin/brittany"]
+CMD ["${INSTALL_DIR}/brittany"]
