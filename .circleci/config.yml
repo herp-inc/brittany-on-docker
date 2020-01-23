@@ -1,0 +1,79 @@
+version: 2
+
+aliases:
+  - &setup-env
+    run:
+      name: Setup environment
+      command: |
+        apk add --update bash curl cabal ghc
+        curl -fsSL https://github.com/mikefarah/yq/releases/download/2.4.1/yq_linux_amd64 -o /usr/bin/yq
+        chmod +x /usr/bin/yq
+        cabal v1-update
+  - &login-docker
+    run:
+      name: Login to Docker Hub
+      command: docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
+
+jobs:
+  build-push-new:
+    docker:
+      - image: docker:19
+    steps:
+      - checkout
+      - setup_remote_docker
+      - *login-docker
+      - *setup-env
+      - run:
+          name: Build and push new images
+          command: SKIP_BUILT=true ./batch.sh herpinc/brittany
+          no_output_timeout: 30m
+  build-push-all:
+    docker:
+      - image: docker:19
+    steps:
+      - checkout
+      - setup_remote_docker
+      - *login-docker
+      - *setup-env
+      - run:
+          name: Build and push all images
+          command: SKIP_BUILT=false ./batch.sh herpinc/brittany
+          no_output_timeout: 30m
+  build-all:
+    docker:
+      - image: docker:19
+    steps:
+      - checkout
+      - setup_remote_docker
+      - *setup-env
+      - run:
+          name: Build all images
+          command: SKIP_BUILT=false SKIP_PUSH=true ./batch.sh herpinc/brittany
+          no_output_timeout: 30m
+
+
+workflows:
+  version: 2
+  push:
+    jobs:
+      - build-push-all:
+          context: docker-hub
+          filters:
+            branches:
+              only: master
+  pr:
+    jobs:
+      - build-all:
+          filters:
+            branches:
+              ignore: master
+  nightly:
+    jobs:
+      - build-push-new:
+          context: docker-hub
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only: master

@@ -4,6 +4,7 @@ set -euo pipefail
 
 
 readonly SKIP_BUILT=${SKIP_BUILT:-false}
+readonly SKIP_PUSH=${SKIP_BUILT:-false}
 
 function check_image_exists() {
   local image_name=$1
@@ -30,8 +31,10 @@ function try_version() {
   echo "Testing $image_name"
   ./test.sh $image_name || return -1
 
-  echo "Pushing $image_name"
-  docker push $image_name || exit -1
+  if ! $SKIP_PUSH; then
+    echo "Pushing $image_name"
+    docker push $image_name || exit -1
+  fi
 }
 
 function main() {
