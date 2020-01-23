@@ -52,6 +52,8 @@ RUN { \
         -o -name llvm-passes \
         -o -name llvm-targets \
         -o -name package.conf.d \); \
+# locale archive
+      echo '/usr/lib/locale'; \
 # workaround for 'createDirectory: does not exist' error in 0.9.0.0
       mkdir -p /.config/brittany && echo "/.config/brittany"; \
     } | xargs -I{} bash -c "echo {}; readlink -f {};" \
@@ -60,6 +62,9 @@ RUN { \
 # copy
 FROM scratch
 COPY --from=0 /closure/ /.
+
+# workaround for 'invalid byte sequence' error caused by reading Japanese characters
+ENV LANG=C.UTF-8
 
 WORKDIR /work
 CMD ["${INSTALL_DIR}/brittany"]

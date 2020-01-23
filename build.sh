@@ -31,7 +31,7 @@ function main() {
   local version=$2
 
   local tarball_url="https://github.com/lspitzner/brittany/archive/$version.tar.gz"
-  local resolver=$(curl -sSL https://raw.githubusercontent.com/lspitzner/brittany/$version/stack.yaml | yq -r .resolver)
+  local resolver=$(curl -sSL https://raw.githubusercontent.com/lspitzner/brittany/$version/stack.yaml | yq read - resolver)
 
   local patch_file="$PATCHES_DIR/$version.patch"
   local patch="$([ -f "$patch_file" ] && cat "$patch_file")"
