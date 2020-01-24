@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+cd "$(dirname "$0")"
+source ./lib/source.sh
 
 readonly SKIP_BUILT=${SKIP_BUILT:-false}
 readonly SKIP_PUSH=${SKIP_PUSH:-false}
@@ -24,10 +26,10 @@ function try_version() {
   fi
 
   echo "Building image for brittany $version: $image_name"
-  ./build.sh $image_name $version || return -1
+  "$SCRIPTS_DIR/build.sh" $image_name $version || return -1
 
   echo "Testing $image_name"
-  ./test.sh $image_name || return -1
+  "$SCRIPTS_DIR/test.sh" $image_name || return -1
 
   if ! $SKIP_PUSH; then
     echo "Pushing $image_name"

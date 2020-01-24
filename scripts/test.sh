@@ -2,14 +2,15 @@
 
 set -euo pipefail
 
-
-readonly TEST_SAMPLE_FILE="./.tmp/sample.hs"
+cd "$(dirname "$0")"
+source ./lib/source.sh
 
 function main() {
   local image_name=$1
 
-  mkdir -p "$(dirname "$TEST_SAMPLE_FILE")"
-  cat > "$TEST_SAMPLE_FILE" << EOF
+  local sample_file="$LOCAL_TMP_DIR/sample.hs"
+
+  cat > "$sample_file" << EOF
 main =    print      "ok"
 EOF
 
@@ -18,7 +19,7 @@ main = print "ok"
 EOF
 )
 
-  local output=$(docker run --rm -i $image_name brittany < "$TEST_SAMPLE_FILE")
+  local output=$(docker run --rm -i $image_name brittany < "$sample_file")
   if [ "$output" != "$expected" ]; then
     echo "test failed for image $image_name"
     echo "Expected: $expected"
@@ -26,7 +27,7 @@ EOF
     exit 1
   fi
 
-  rm "$TEST_SAMPLE_FILE"
+  rm "$sample_file"
   exit 0
 }
 

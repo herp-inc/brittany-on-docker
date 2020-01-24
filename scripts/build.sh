@@ -11,17 +11,18 @@
 
 set -euo pipefail
 
-readonly PATCHES_DIR=./patches
+cd "$(dirname "$0")"
+source ./lib/source.sh
 
 function build_image() {
-  local build_image="$1"
+  local build_image=$1
   local image_name=$2
   local tarball_url="$3"
   local patch="$4"
 
-  docker build . \
+  docker build "$DOCKERFILE_DIR" \
     -t $image_name \
-    --build-arg STACK_IMAGE="$build_image" \
+    --build-arg STACK_IMAGE=$build_image \
     --build-arg TARBALL="$tarball_url" \
     --build-arg PATCH="$patch"
 }
