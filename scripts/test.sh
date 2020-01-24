@@ -21,9 +21,9 @@ EOF
 
   local output=$(docker run --rm -i $image_name brittany < "$sample_file")
   if [ "$output" != "$expected" ]; then
-    echo "test failed for image $image_name"
-    echo "Expected: $expected"
-    echo "But got: $output"
+    error "Test failed for image $image_name"
+    error "Expected: $expected"
+    error "But got: $output"
     exit 1
   fi
 
