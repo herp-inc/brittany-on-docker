@@ -15,6 +15,14 @@ aliases:
       command: docker login -u $DOCKER_HUB_USERNAME -p $DOCKER_HUB_PASSWORD
 
 jobs:
+  run-shellcheck:
+    docker:
+      - image: koalaman/shellcheck-alpine:v0.7.0
+    steps:
+      - checkout
+      - run:
+          name: run ShellCheck
+          command: find . -type f -name '*.sh' | xargs shellcheck -x
   build-push-new:
     docker:
       - image: docker:19
@@ -56,8 +64,10 @@ workflows:
   version: 2
   push:
     jobs:
+      - run-shellcheck
       - build-push-all:
           context: docker-hub
+          requires: [ run-shellcheck ]
           filters:
             branches:
               only: master
