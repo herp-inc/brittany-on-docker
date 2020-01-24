@@ -4,7 +4,7 @@ set -euo pipefail
 
 
 readonly SKIP_BUILT=${SKIP_BUILT:-false}
-readonly SKIP_PUSH=${SKIP_BUILT:-false}
+readonly SKIP_PUSH=${SKIP_PUSH:-false}
 
 function check_image_exists() {
   local image_name=$1

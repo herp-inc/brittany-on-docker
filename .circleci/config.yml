@@ -25,7 +25,7 @@ jobs:
       - *setup-env
       - run:
           name: Build and push new images
-          command: SKIP_BUILT=true ./batch.sh herpinc/brittany
+          command: SKIP_BUILT=true ./scripts/batch.sh herpinc/brittany
           no_output_timeout: 30m
   build-push-all:
     docker:
@@ -37,7 +37,7 @@ jobs:
       - *setup-env
       - run:
           name: Build and push all images
-          command: SKIP_BUILT=false ./batch.sh herpinc/brittany
+          command: SKIP_BUILT=false ./scripts/batch.sh herpinc/brittany
           no_output_timeout: 30m
   build-all:
     docker:
@@ -48,7 +48,7 @@ jobs:
       - *setup-env
       - run:
           name: Build all images
-          command: SKIP_BUILT=false SKIP_PUSH=true ./batch.sh herpinc/brittany
+          command: SKIP_BUILT=false SKIP_PUSH=true ./scripts/batch.sh herpinc/brittany
           no_output_timeout: 30m
 
 
