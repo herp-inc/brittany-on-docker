@@ -75,9 +75,9 @@ function main() {
     exit 1
   fi
 
-  if ! try_version "$image_repo:latest" "$latest"; then
-    error "Could not build the latest version: $latest"
-    exit 1
+  if ! $SKIP_PUSH; then
+    run docker tag "$image_repo:$latest" "$image_repo:latest"
+    run docker push "$image_repo:latest"
   fi
 }
 
