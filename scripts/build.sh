@@ -21,6 +21,11 @@ function build_image() {
   local -r tarball_url="$3"
   local -r patch="$4"
 
+  # suppress huge progress output in CI
+  if ${CI:-false}; then
+    docker pull -q "$build_image"
+  fi
+
   docker build "$DOCKERFILE_DIR" \
     -t "$image_name" \
     --build-arg STACK_IMAGE="$build_image" \
