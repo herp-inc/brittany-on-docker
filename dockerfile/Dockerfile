@@ -3,11 +3,17 @@ FROM ${STACK_IMAGE}
 
 # setup build environment
 WORKDIR /tmp
+SHELL ["/bin/bash", "-c"]
+
 ADD https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz upx.tar.xz
 RUN tar --strip-components=1 -xf upx.tar.xz && mv upx /usr/bin/
 
-RUN mkdir -p /etc/stack && \
-      echo "{ recommend-stack-upgrade: false, system-ghc: true, build: { split-objs: true } }" > /etc/stack/config.yaml
+ADD https://github.com/mikefarah/yq/releases/download/2.4.1/yq_linux_amd64 /usr/bin/yq
+RUN chmod +x /usr/bin/yq
+
+RUN mkdir -p /etc/stack
+RUN [ -f /etc/stack/config.yaml ] || echo "{}" > /etc/stack/config.yaml
+RUN yq merge -i -a /etc/stack/config.yaml - <<< "{ recommend-stack-upgrade: false, system-ghc: true, build: { split-objs: true } }"
 RUN stack update
 
 # prepare source
@@ -19,6 +25,7 @@ RUN tar --strip-components=1 -xf source.tgz
 # patch source
 ARG PATCH=""
 RUN echo -n "${PATCH}" | patch -u
+RUN yq merge -i -a stack.yaml - <<< "drop-packages: [ Cabal ]"
 
 # build
 ARG INSTALL_DIR=/usr/bin
