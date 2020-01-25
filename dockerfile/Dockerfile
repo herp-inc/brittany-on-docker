@@ -7,7 +7,7 @@ ADD https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.
 RUN tar --strip-components=1 -xf upx.tar.xz && mv upx /usr/bin/
 
 RUN mkdir -p /etc/stack && \
-      echo "{ system-ghc: true, build: { split-objs: true } }" > /etc/stack/config.yaml
+      echo "{ recommend-stack-upgrade: false, system-ghc: true, build: { split-objs: true } }" > /etc/stack/config.yaml
 RUN stack update
 
 # prepare source
