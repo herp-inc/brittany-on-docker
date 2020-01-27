@@ -19,7 +19,10 @@ function build_image() {
   local -r build_image="$1"
   local -r image_name="$2"
   local -r tarball_url="$3"
-  local -r patch="$4"
+  local -r patch_path="$4"
+
+  local relative_patch_path
+  relative_patch_path="$(realpath --relative-to="$DOCKERFILE_DIR" "$patch_path")"
 
   # suppress huge progress output in CI
   if ${CI:-false}; then
@@ -30,23 +33,29 @@ function build_image() {
     -t "$image_name" \
     --build-arg STACK_IMAGE="$build_image" \
     --build-arg TARBALL="$tarball_url" \
-    --build-arg PATCH="$patch"
+    --build-arg PATCH_FILE="$relative_patch_path"
 }
 
 function main() {
   local -r image_name="$1"
   local -r version="$2"
 
-  local tarball_url resolver patch_file patch
-
-  tarball_url="https://github.com/lspitzner/brittany/archive/$version.tar.gz"
+  local -r tarball_url="https://github.com/lspitzner/brittany/archive/$version.tar.gz"
+  local resolver
   resolver=$(curl -sSL https://raw.githubusercontent.com/lspitzner/brittany/"$version"/stack.yaml | yq read - resolver)
 
-  patch_file="$PATCHES_DIR/$version.patch"
-  # shellcheck disable=SC2015
-  patch="$([ -f "$patch_file" ] && cat "$patch_file" || true)"
+  local -r patch_file="$PATCHES_DIR/$version.patch"
+  local -r patch_dest_file="$LOCAL_TMP_DIR/fix.patch"
 
-  build_image "fpco/stack-build:$resolver" "$image_name" "$tarball_url" "$patch"
+  if [ -f "$patch_file" ]; then
+    cp "$patch_file" "$patch_dest_file"
+  else
+    touch "$patch_dest_file"
+  fi
+
+  build_image "fpco/stack-build:$resolver" "$image_name" "$tarball_url" "$patch_dest_file"
+
+  rm -f "$patch_dest_file"
 }
 
 main "$@"

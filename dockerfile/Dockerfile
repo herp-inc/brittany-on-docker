@@ -20,8 +20,9 @@ RUN yq merge -i -a /etc/stack/config.yaml - <<< "{ recommend-stack-upgrade: fals
 RUN stack update > /dev/null 2>&1
 
 # patch source
-ARG PATCH=""
-RUN echo -n "${PATCH}" | patch -u
+ARG PATCH_FILE
+COPY $PATCH_FILE /tmp/fix.patch
+RUN patch -u < /tmp/fix.patch
 RUN yq merge -i -a stack.yaml - <<< "drop-packages: [ Cabal ]"
 
 # build
