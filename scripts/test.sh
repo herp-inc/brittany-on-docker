@@ -31,7 +31,8 @@ EOF
     exit 1
   fi
 
-  rm "$sample_file"
+  rm -f "$sample_file"
+
   exit 0
 }
 

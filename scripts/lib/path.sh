@@ -9,3 +9,8 @@ readonly DOCKERFILE_DIR="$PROJECT_DIR/$CONFIG_DOCKERFILE_DIR"
 
 readonly LOCAL_TMP_DIR="$DOCKERFILE_DIR/$CONFIG_LOCAL_TMP_DIR"
 mkdir -p "$LOCAL_TMP_DIR"
+
+function cleanup() {
+  rm -rf "$LOCAL_TMP_DIR"
+}
+trap cleanup EXIT
