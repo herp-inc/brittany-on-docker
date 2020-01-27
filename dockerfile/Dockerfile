@@ -2,25 +2,22 @@ ARG STACK_IMAGE
 FROM ${STACK_IMAGE}
 
 # setup build environment
-WORKDIR /tmp
 SHELL ["/bin/bash", "-c"]
-
-ADD https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz upx.tar.xz
-RUN tar --strip-components=1 -xf upx.tar.xz && mv upx /usr/bin/
 
 ADD https://github.com/mikefarah/yq/releases/download/2.4.1/yq_linux_amd64 /usr/bin/yq
 RUN chmod +x /usr/bin/yq
-
-RUN mkdir -p /etc/stack
-RUN [ -f /etc/stack/config.yaml ] || echo "{}" > /etc/stack/config.yaml
-RUN yq merge -i -a /etc/stack/config.yaml - <<< "{ recommend-stack-upgrade: false, system-ghc: true, build: { split-objs: true } }"
-RUN stack update
 
 # prepare source
 ARG TARBALL
 WORKDIR /usr/src/brittany
 ADD ${TARBALL} source.tgz
 RUN tar --strip-components=1 -xf source.tgz
+
+# prepare stack
+RUN mkdir -p /etc/stack
+RUN [ -f /etc/stack/config.yaml ] || echo "{}" > /etc/stack/config.yaml
+RUN yq merge -i -a /etc/stack/config.yaml - <<< "{ recommend-stack-upgrade: false, system-ghc: true }"
+RUN stack update > /dev/null 2>&1
 
 # patch source
 ARG PATCH=""
@@ -29,7 +26,12 @@ RUN yq merge -i -a stack.yaml - <<< "drop-packages: [ Cabal ]"
 
 # build
 ARG INSTALL_DIR=/usr/bin
-RUN stack install --local-bin-path "${INSTALL_DIR}" --ghc-options="-optc-Os"
+RUN stack install --local-bin-path "${INSTALL_DIR}" --ghc-options="-optc-Os -j"
+
+# prepare for compression
+WORKDIR /tmp
+ADD https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz upx.tar.xz
+RUN tar --strip-components=1 -xf upx.tar.xz && mv upx /usr/bin/
 
 # compress executable
 RUN cp "${INSTALL_DIR}/brittany" /tmp/brittany_copy
