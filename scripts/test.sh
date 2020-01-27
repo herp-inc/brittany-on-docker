@@ -11,11 +11,13 @@ function main() {
   local -r sample_file="$LOCAL_TMP_DIR/sample.hs"
 
   cat > "$sample_file" << EOF
+-- 日本語
 main =    print      "ok"
 EOF
 
   local expected
   expected=$(cat << EOF
+-- 日本語
 main = print "ok"
 EOF
 )
