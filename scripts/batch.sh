@@ -55,7 +55,7 @@ function main() {
     latest=$(echo "$versions" | awk '{print $NF}')
   else
     latest=$2
-    shift
+    shift; shift
     versions="$*"
   fi
 
