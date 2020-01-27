@@ -61,8 +61,8 @@ RUN { \
         -o -name llvm-passes \
         -o -name llvm-targets \
         -o -name package.conf.d \); \
-# locale archive
-      echo '/usr/lib/locale'; \
+# locale files
+      echo '/usr/lib/locale/C.UTF-8'; \
 # workaround for 'createDirectory: does not exist' error in 0.9.0.0
       mkdir -p /.config/brittany && echo "/.config/brittany"; \
     } | xargs -I{} bash -c "echo {}; readlink -f {};" \
