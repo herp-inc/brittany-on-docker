@@ -65,12 +65,12 @@ function main() {
   local completed=""
   for v in $versions; do
     try_version "$image_repo:$v" "$v" || continue
-    completed="$completed $v"
+    completed="${completed:+$completed }$v"
   done
 
   if [ "$completed" != "$versions" ]; then
     error "Some versions could not be built."
-    error "Tried: $versions"
+    error "Tried:     $versions"
     error "Completed: $completed"
     exit 1
   fi
