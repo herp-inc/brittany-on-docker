@@ -50,7 +50,7 @@ function main() {
 
   local versions latest
   if [ $# -eq 1 ]; then
-    versions=$(cabal list --simple-output brittany | sed -n 's/brittany \(.*\)/\1/p' | tr '\n' ' ')
+    versions=$(cabal list --simple-output brittany | sed -n 's/brittany \(.*\)/\1/p' | tr '\n' ' ' | xargs)
     # TODO: Find a canonical way to obtain the latest version from Hackage.
     latest=$(echo "$versions" | awk '{print $NF}')
   else
