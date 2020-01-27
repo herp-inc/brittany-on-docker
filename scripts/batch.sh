@@ -79,6 +79,8 @@ function main() {
     run docker tag "$image_repo:$latest" "$image_repo:latest"
     run docker push "$image_repo:latest"
   fi
+
+  exit 0
 }
 
 main "$@"

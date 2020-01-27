@@ -51,6 +51,8 @@ function main() {
   build_image "fpco/stack-build:$resolver" "$image_name" "$tarball_url" "$patch_dest_file"
 
   rm -f "$patch_dest_file"
+
+  exit 0
 }
 
 main "$@"
