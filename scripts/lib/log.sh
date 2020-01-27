@@ -7,7 +7,17 @@ function _log() {
   local -r header="$1"
   local -r color="$2"
   local -r message="$3"
-  printf "%-${HEADER_LENGTH}s $message\n" "$(tput setaf "$color")$header$(tput sgr0)" >&2
+
+  # should we colorize the output?
+  if [ -t 1 ] && [ -v TERM ] && type tput > /dev/null 2>&1; then
+    local -r set_color="$(tput setaf "$color")"
+    local -r reset_color="$(tput sgr0)"
+  else
+    local -r set_color=""
+    local -r reset_color=""
+  fi
+
+  printf "%-${HEADER_LENGTH}s $message\n" "${set_color}${header}${reset_color}" >&2
 }
 
 function progress() {
