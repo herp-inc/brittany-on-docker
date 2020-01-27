@@ -24,11 +24,6 @@ function build_image() {
   local relative_patch_path
   relative_patch_path="$(realpath --relative-to="$DOCKERFILE_DIR" "$patch_path")"
 
-  # suppress huge progress output in CI
-  if ${CI:-false}; then
-    docker pull -q "$build_image"
-  fi
-
   docker build "$DOCKERFILE_DIR" \
     -t "$image_name" \
     --build-arg STACK_IMAGE="$build_image" \
