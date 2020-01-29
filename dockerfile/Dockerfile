@@ -73,7 +73,7 @@ RUN { \
 FROM scratch
 COPY --from=0 /closure/ /.
 
-# workaround for 'invalid byte sequence' error caused by reading Japanese characters
+# workaround for 'invalid byte sequence' error caused by reading multibyte characters
 ENV LANG=C.UTF-8
 
 WORKDIR /work
