@@ -36,7 +36,7 @@ RUN tar --strip-components=1 -xf upx.tar.xz && mv upx /usr/bin/
 
 # compress executable
 RUN cp "${INSTALL_DIR}/brittany" /tmp/brittany_copy
-RUN upx -q -9 --brute "${INSTALL_DIR}/brittany"
+RUN upx -q -9 "${INSTALL_DIR}/brittany"
 
 # collect runtime dependencies
 WORKDIR /closure
