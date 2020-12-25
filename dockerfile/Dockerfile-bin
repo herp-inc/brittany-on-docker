@@ -1,0 +1,60 @@
+ARG HASKELL_IMAGE
+FROM ${HASKELL_IMAGE}
+
+ENV DEBIAN_FRONTEND noninteractive
+
+WORKDIR /tmp
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends xz-utils libtinfo5
+ADD https://github.com/upx/upx/releases/download/v3.95/upx-3.95-amd64_linux.tar.xz upx.tar.xz
+RUN tar --strip-components=1 -xf upx.tar.xz && mv upx /usr/bin/
+
+ARG EXECUTABLE_FILE
+ARG INSTALL_DIR=/usr/bin
+COPY $EXECUTABLE_FILE $INSTALL_DIR/brittany
+RUN chmod +x "${INSTALL_DIR}/brittany"
+
+# compress executable
+RUN cp "${INSTALL_DIR}/brittany" /tmp/brittany_copy
+RUN upx -q -9 "${INSTALL_DIR}/brittany"
+
+# collect runtime dependencies
+WORKDIR /closure
+RUN { \
+# brittany itself
+      echo "${INSTALL_DIR}/brittany"; \
+# interpreter
+      readelf -l /tmp/brittany_copy \
+        | grep "program interpreter" \
+        | sed -e 's/^.*: \(.*\)\]$/\1/'; \
+# dynamically linked libraries
+      ldd /tmp/brittany_copy \
+        | awk -F'=>' '{print $2}' \
+        | sed -e 's/(.*)//' -e '/^\s*$/d' \
+        | awk '{$1=$1};1'; \
+# ghc-related files
+      find / \
+        \( -path '/opt/ghc/*/lib/ghc-*/*' \
+        -o -path '/root/.stack/programs/x86_64-linux/ghc-*/lib/ghc-*/*' \) \
+        -a \
+        \( -name settings \
+        -o -name platformConstants \
+        -o -name llvm-passes \
+        -o -name llvm-targets \
+        -o -name package.conf.d \); \
+# locale files
+      echo '/usr/lib/locale/C.UTF-8'; \
+# workaround for 'createDirectory: does not exist' error in 0.9.0.0
+      mkdir -p /.config/brittany && echo "/.config/brittany"; \
+    } | xargs -I{} bash -c "echo {}; readlink -f {};" \
+      | xargs -I{} cp -r --parents {} .
+
+# copy
+FROM scratch
+COPY --from=0 /closure/ /.
+
+# workaround for 'invalid byte sequence' error caused by reading multibyte characters
+ENV LANG=C.UTF-8
+
+WORKDIR /work
+CMD ["${INSTALL_DIR}/brittany"]
