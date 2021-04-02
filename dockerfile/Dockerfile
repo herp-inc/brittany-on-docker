@@ -1,11 +1,14 @@
-ARG STACK_IMAGE
-FROM ${STACK_IMAGE}
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
 
 # setup build environment
 SHELL ["/bin/bash", "-c"]
+ENV DEBIAN_FRONTEND=noninteractive
 
 ADD https://github.com/mikefarah/yq/releases/download/2.4.1/yq_linux_amd64 /usr/bin/yq
 RUN chmod +x /usr/bin/yq
+RUN apt-get update -y
+RUN apt-get install -y --no-install-recommends patch xz-utils
 
 # prepare source
 ARG TARBALL
