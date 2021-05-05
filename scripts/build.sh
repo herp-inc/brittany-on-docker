@@ -26,7 +26,7 @@ function build_image_from_source() {
 
   docker build "$DOCKERFILE_DIR" \
     -t "$image_name" \
-    --build-arg STACK_IMAGE="$build_image" \
+    --build-arg BASE_IMAGE="$build_image" \
     --build-arg TARBALL="$tarball_url" \
     --build-arg PATCH_FILE="$relative_patch_path"
 }
@@ -75,13 +75,65 @@ function from_binary() {
   exit 0
 }
 
+# https://docs.haskellstack.org/en/stable/pantry/
+function get_ghc_version_from_resolver() {
+  local -r resolver=$1
+
+  case "$resolver" in
+    github:*/*:* )
+      local -r repo_path=${resolver#github:}
+      local -r path=${repo_path/://master/}
+      get_ghc_version_from_resolver "https://raw.githubusercontent.com/$path"
+      ;;
+    lts-*.* )
+      local -r version=${resolver#lts-}
+      local -r path=${version/.//}
+      get_ghc_version_from_resolver "github:commercialhaskell/stackage-snapshots:lts/$path.yaml"
+      ;;
+    nightly-*-*-* )
+      local version
+      version=${resolver#nightly-}
+      # YYYY-0m-0d
+      version=${version/-0/-}
+      local -r path=${version//-//}
+      get_ghc_version_from_resolver "github:commercialhaskell/stackage-snapshots:nightly/$path.yaml"
+      ;;
+    ghc-* )
+      local -r ghc_version=${resolver#ghc-}
+      echo "$ghc_version"
+      ;;
+    http* )
+      local snapshot ghc_version
+      snapshot=$(curl -fsSL "$resolver")
+      ghc_version=$(yq read - resolver.compiler <<< "$snapshot")
+
+      if [ "$ghc_version" = "null" ]; then
+        ghc_version=$(yq read - compiler <<< "$snapshot")
+      fi
+
+      if [[ "$ghc_version" != ghc-* ]]; then
+        error "Unsupported compiler: $ghc_version"
+        exit 1
+      fi
+
+      echo "${ghc_version#ghc-}"
+      ;;
+    * )
+      error "Unsupported resolver: $resolver"
+      exit 1
+      ;;
+  esac
+}
+
 function from_source() {
   local -r image_name="$1"
   local -r version="$2"
 
   local -r tarball_url="https://github.com/lspitzner/brittany/archive/$version.tar.gz"
-  local resolver
+
+  local resolver ghc_version
   resolver=$(curl -sSL https://raw.githubusercontent.com/lspitzner/brittany/"$version"/stack.yaml | yq read - resolver)
+  ghc_version=$(get_ghc_version_from_resolver "$resolver")
 
   local -r patch_file="$PATCHES_DIR/$version.patch"
   local -r patch_dest_file="$LOCAL_TMP_DIR/fix.patch"
@@ -92,7 +144,7 @@ function from_source() {
     touch "$patch_dest_file"
   fi
 
-  build_image_from_source "fpco/stack-build:$resolver" "$image_name" "$tarball_url" "$patch_dest_file"
+  build_image_from_source "haskell:$ghc_version" "$image_name" "$tarball_url" "$patch_dest_file"
 
   rm -f "$patch_dest_file"
 
